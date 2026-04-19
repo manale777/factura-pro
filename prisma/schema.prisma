@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Cliente {
+  id        String    @id @default(cuid())
+  nombre    String
+  nit       String    @unique
+  telefono  String?
+  email     String?
+  ciudad    String?
+  direccion String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  facturas  Factura[]
+}
+
+model Producto {
+  id          String                 @id @default(cuid())
+  codigo      String                 @unique
+  descripcion String
+  categoria   String
+  precio      Float
+  iva         Float                  @default(13)
+  stock       Int?
+  unidad      String                 @default("unidad")
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  items       ItemFactura[]
+  movimientos MovimientoInventario[]
+}
+
+model Factura {
+  id          String        @id @default(cuid())
+  numero      String        @unique
+  clienteId   String
+  emision     DateTime      @default(now())
+  vencimiento DateTime
+  subtotal    Float
+  totalIva    Float
+  total       Float
+  estado      EstadoFactura @default(Borrador)
+  notas       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  cliente     Cliente       @relation(fields: [clienteId], references: [id])
+  items       ItemFactura[]
+}
+
+model ItemFactura {
+  id             String    @id @default(cuid())
+  facturaId      String
+  productoId     String?
+  descripcion    String
+  cantidad       Float
+  precioUnitario Float
+  descuento      Float     @default(0)
+  subtotal       Float
+  iva            Float
+  total          Float
+  factura        Factura   @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  producto       Producto? @relation(fields: [productoId], references: [id])
+}
+
+model MovimientoInventario {
+  id            String         @id @default(cuid())
+  productoId    String
+  tipo          TipoMovimiento
+  cantidad      Int
+  stockAnterior Int
+  stockActual   Int
+  nota          String?
+  usuario       String
+  fecha         DateTime       @default(now())
+  producto      Producto       @relation(fields: [productoId], references: [id])
+}
+
+enum EstadoFactura {
+  Borrador
+  Pendiente
+  Pagada
+  Vencida
+}
+
+enum TipoMovimiento {
+  Entrada
+  Salida
+  Ajuste
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  nombre    String
+  email     String   @unique
+  password  String
+  rol       String   @default("operador")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
