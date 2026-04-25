@@ -1,19 +1,6 @@
-import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { EstadoFactura } from '@prisma/client'
-import type { Prisma } from '@prisma/client'
-
-type ClienteConFacturas = Prisma.ClienteGetPayload<{
-  include: {
-    _count: { select: { facturas: true } }
-    facturas: {
-      select: {
-        total: true
-        estado: true
-      }
-    }
-  }
-}>
+import { CrearClienteSchema, toClienteResumenDTO } from '@/lib/dtos'
+import { okResponse, errorResponse, validationError } from '@/lib/api-response'
 
 export async function GET() {
   try {
@@ -21,38 +8,25 @@ export async function GET() {
       orderBy: { nombre: 'asc' },
       include: {
         _count: { select: { facturas: true } },
-        facturas: {
-          select: { total: true, estado: true },
-        },
+        facturas: { select: { total: true, estado: true } },
       },
     })
-
-    const data = clientes.map((c: ClienteConFacturas) => ({
-      id: c.id,
-      nombre: c.nombre,
-      nit: c.nit,
-      telefono: c.telefono,
-      email: c.email,
-      ciudad: c.ciudad,
-      direccion: c.direccion,
-      totalFacturas: c._count.facturas,
-      saldoPendiente: c.facturas
-        .filter((f: { total: number; estado: EstadoFactura }) => f.estado === 'Pendiente' || f.estado === 'Vencida')
-        .reduce((acc: number, f: { total: number }) => acc + f.total, 0),
-    }))
-
-    return NextResponse.json(data)
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al obtener clientes' }, { status: 500 })
+    return okResponse(clientes.map(toClienteResumenDTO))
+  } catch {
+    return errorResponse('Error al obtener clientes')
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const cliente = await prisma.cliente.create({ data: body })
-    return NextResponse.json(cliente, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al crear cliente' }, { status: 500 })
+    const validado = CrearClienteSchema.safeParse(body)
+    if (!validado.success) return validationError(validado.error)
+
+    const cliente = await prisma.cliente.create({ data: validado.data })
+    return okResponse(cliente, 201)
+  } catch (e: any) {
+    if (e.code === 'P2002') return errorResponse('Ya existe un cliente con ese NIT', 409)
+    return errorResponse('Error al crear cliente')
   }
 }

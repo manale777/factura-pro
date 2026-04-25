@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import Link from 'next/link'
 import { ArrowLeft, Phone, Mail, MapPin, FileText } from 'lucide-react'
-//import { clientes, facturas } from '@/lib/data'
 import EstadoBadge from '@/components/ui/EstadoBadge'
-import EditarClienteForm from '@/components/modules/EditarClienteForm'
+import ClienteDetalleClient from '@/components/modules/ClineteDetalleClient'
+
 
 export default async function ClienteDetallePage({
   params,
@@ -32,18 +32,6 @@ export default async function ClienteDetallePage({
   return (
     <div className="space-y-4 max-w-4xl">
 
-      {/* Encabezado */}
-      <div className="flex items-center gap-3">
-        <Link href="/clientes"
-          className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
-          <ArrowLeft size={16} />
-        </Link>
-        <div>
-          <p className="text-xs text-gray-400">Clientes / Detalle</p>
-          <h1 className="text-lg font-semibold text-gray-800">{cliente.nombre}</h1>
-        </div>
-      </div>
-
       <div className="flex items-center gap-3">
         <Link href="/clientes"
           className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
@@ -53,7 +41,8 @@ export default async function ClienteDetallePage({
           <p className="text-xs text-gray-400">Clientes / Detalle</p>
           <h1 className="text-lg font-semibold text-gray-800">{cliente.nombre}</h1>
         </div>
-        <EditarClienteForm cliente={cliente} />
+        {/* <EditarClienteForm cliente={cliente} /> */}
+        <ClienteDetalleClient cliente={cliente} />
       </div>
 
       <div className="grid grid-cols-3 gap-4">

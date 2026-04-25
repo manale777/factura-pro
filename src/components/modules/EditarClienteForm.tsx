@@ -16,7 +16,7 @@ export default function EditarClienteForm({ cliente }: { cliente: any }) {
   const router = useRouter()
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
-  const [form, setForm] = useState({
+  const [form, setForm] = useState({  
     nombre: cliente.nombre,
     nit: cliente.nit,
     telefono: cliente.telefono ?? '',

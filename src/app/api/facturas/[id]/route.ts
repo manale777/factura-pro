@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { CambiarEstadoSchema, toFacturaDetalleDTO } from '@/lib/dtos'
+import { okResponse, errorResponse, validationError, notFoundError } from '@/lib/api-response'
 
 export async function GET(
   _req: Request,
@@ -14,10 +15,10 @@ export async function GET(
         items: { include: { producto: true } },
       },
     })
-    if (!factura) return NextResponse.json({ error: 'No encontrada' }, { status: 404 })
-    return NextResponse.json(factura)
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al obtener factura' }, { status: 500 })
+    if (!factura) return notFoundError('Factura')
+    return okResponse(toFacturaDetalleDTO(factura))
+  } catch {
+    return errorResponse('Error al obtener factura')
   }
 }
 
@@ -28,12 +29,20 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
+    const validado = CambiarEstadoSchema.safeParse(body)
+    if (!validado.success) return validationError(validado.error)
+
     const factura = await prisma.factura.update({
       where: { id },
-      data: { estado: body.estado },
+      data: { estado: validado.data.estado },
+      include: {
+        cliente: { select: { id: true, nombre: true, nit: true } },
+        items: true,
+      },
     })
-    return NextResponse.json(factura)
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al actualizar factura' }, { status: 500 })
+    return okResponse(toFacturaResumenDTO(factura))
+  } catch (e: any) {
+    if (e.code === 'P2025') return notFoundError('Factura')
+    return errorResponse('Error al actualizar factura')
   }
 }

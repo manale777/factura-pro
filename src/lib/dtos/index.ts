@@ -1,0 +1,5 @@
+export * from './cliente.dto'
+export * from './producto.dto'
+export * from './factura.dto'
+export * from './inventario.dto'
+export * from './dashboard.dto'

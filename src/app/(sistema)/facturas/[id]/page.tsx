@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, Printer } from 'lucide-react'
 import EstadoBadge from '@/components/ui/EstadoBadge'
 import BotonPDF from '@/components/modules/BotonPDF'
+import CambiarEstado from '@/components/modules/CambiarEstado'
 
 async function getFactura(id: string) {
   const res = await fetch(`http://localhost:3000/api/facturas/${id}`, { cache: 'no-store' })
@@ -33,7 +34,7 @@ export default async function FacturaDetallePage({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <EstadoBadge estado={factura.estado} />
+          <CambiarEstado facturaId={factura.id} estadoActual={factura.estado} />
           <BotonPDF facturaId={factura.id} numero={factura.numero} />
         </div>
       </div>

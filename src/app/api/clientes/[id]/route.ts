@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { ActualizarClienteSchema, toClienteDetalleDTO } from '@/lib/dtos'
+import { okResponse, errorResponse, validationError, notFoundError } from '@/lib/api-response'
 
 export async function GET(
   _req: Request,
@@ -10,19 +11,17 @@ export async function GET(
     const cliente = await prisma.cliente.findUnique({
       where: { id },
       include: {
+        _count: { select: { facturas: true } },
         facturas: {
           orderBy: { emision: 'desc' },
-          select: {
-            id: true, numero: true, emision: true,
-            vencimiento: true, total: true, estado: true,
-          },
+          select: { id: true, numero: true, emision: true, vencimiento: true, total: true, estado: true },
         },
       },
     })
-    if (!cliente) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
-    return NextResponse.json(cliente)
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al obtener cliente' }, { status: 500 })
+    if (!cliente) return notFoundError('Cliente')
+    return okResponse(toClienteDetalleDTO(cliente))
+  } catch {
+    return errorResponse('Error al obtener cliente')
   }
 }
 
@@ -33,10 +32,14 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const cliente = await prisma.cliente.update({ where: { id }, data: body })
-    return NextResponse.json(cliente)
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al actualizar cliente' }, { status: 500 })
+    const validado = ActualizarClienteSchema.safeParse(body)
+    if (!validado.success) return validationError(validado.error)
+
+    const cliente = await prisma.cliente.update({ where: { id }, data: validado.data })
+    return okResponse(cliente)
+  } catch (e: any) {
+    if (e.code === 'P2025') return notFoundError('Cliente')
+    return errorResponse('Error al actualizar cliente')
   }
 }
 
@@ -47,8 +50,9 @@ export async function DELETE(
   try {
     const { id } = await params
     await prisma.cliente.delete({ where: { id } })
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    return NextResponse.json({ error: 'Error al eliminar cliente' }, { status: 500 })
+    return okResponse({ ok: true })
+  } catch (e: any) {
+    if (e.code === 'P2025') return notFoundError('Cliente')
+    return errorResponse('Error al eliminar cliente')
   }
 }

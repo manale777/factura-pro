@@ -22,11 +22,6 @@ export default function InventarioClient({
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-xs text-gray-400">Inicio / Inventario</p>
-        <h1 className="text-lg font-semibold text-gray-800 mt-0.5">Inventario</h1>
-      </div>
-
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           { label: 'Unidades en stock', value: totalUnidades, icon: Package, color: 'bg-blue-50 text-blue-500' },
